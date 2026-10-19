@@ -1,12 +1,16 @@
-# Food Access, Food Environments, and Obesity
+# Obesity and Fresh Food Access
 
-### A county-level machine-learning research extension
+### New Evidence and Solutions From Geospatial Data
+
+**Saswat Tripathi · ISEF-related research**
 
 **Do local food environments help predict adult obesity after accounting for socioeconomic conditions and rural–urban context?** This project combines public data for **3,110 U.S. counties** and compares an interpretable linear model with gradient-boosted trees.
 
-## Research origins
+## About this research
 
-This work extends **Saswat Tripathi’s ISEF project, _“Obesity and Fresh Food Access: New Evidence and Solutions From Geospatial Data”_**. The original project provides the research foundation. This repository presents the subsequent county-level modeling extension: merged public datasets, food-environment features, state-grouped validation, and model interpretation. It does not present these extension analyses as the original ISEF submission.
+This repository contains **Saswat Tripathi’s research for and continued work on his ISEF project, _“Obesity and Fresh Food Access: New Evidence and Solutions From Geospatial Data.”_** It brings together public geospatial and socioeconomic data to investigate how food access and the balance of healthy and unhealthy food outlets relate to adult obesity across U.S. counties.
+
+The analysis combines county-level datasets, constructs food-environment measures, compares machine-learning models, and examines their predictions using state-grouped validation and model interpretation.
 
 ## At a glance
 
@@ -19,14 +23,14 @@ This work extends **Saswat Tripathi’s ISEF project, _“Obesity and Fresh Food
 | Models | ElasticNet and XGBoost |
 | Evaluation | Five-fold cross-validation, holding out entire states |
 
-## What the saved results show
+## Results
 
 | Model | RMSE (percentage points) | MAE (percentage points) | R² |
 | --- | ---: | ---: | ---: |
 | ElasticNet | 2.938 | 2.272 | 0.524 |
 | XGBoost | 2.932 | 2.272 | 0.526 |
 
-These are **historical saved results**, included in [`results/reference/`](results/reference/). The two models perform similarly. Educational attainment and poverty have the strongest signals in the saved coefficients and tree feature importance. The food-swamp log ratio has a smaller positive association in the linear model; limited food access receives a zero coefficient after regularization.
+The verified model results are included in [`results/reference/`](results/reference/). The two models perform similarly. Educational attainment and poverty have the strongest signals in the saved coefficients and tree feature importance. The food-swamp log ratio has a smaller positive association in the linear model; limited food access receives a zero coefficient after regularization.
 
 These findings describe **county-level associations, not causal effects or individual health predictions**. They do not establish that a particular intervention would reduce obesity. See [methods and limitations](docs/methods.md) for evaluation and interpretation details.
 
@@ -51,7 +55,7 @@ python -m pip install -r requirements.txt
 python src/model.py --data data/processed/county_obesity_2019_model_data.csv
 ```
 
-On Windows, activate with `.venv\Scripts\activate`. The default run evaluates both models with two food-swamp definitions and writes metrics, coefficients, predictions, and plots to `results/generated/`. Reference artifacts remain separate. CPU use defaults to two jobs; use `--jobs 1` for a serial run. All four default runs were verified against the historical metrics; see the [validation record](docs/validation.md).
+On Windows, activate with `.venv\Scripts\activate`. The default run evaluates both models with two food-swamp definitions and writes metrics, coefficients, predictions, and plots to `results/generated/`. Reference artifacts remain separate. CPU use defaults to two jobs; use `--jobs 1` for a serial run. All four default runs were verified against the reference metrics; see the [validation record](docs/validation.md).
 
 The processed dataset is included, so modeling does not require downloading the original sources. To rebuild it, follow the [data guide](docs/data.md).
 
@@ -62,14 +66,14 @@ src/                     Data preparation and modeling scripts
 data/processed/          Cleaned county-level modeling data
 docs/data.md             Data sources, variables, provenance, and rebuild instructions
 docs/methods.md          Model design and research limitations
-results/reference/       Selected historical results and figures
+results/reference/       Verified reference results and figures
 requirements.txt         Recorded Python dependency versions
 ```
 
 ## Scope and next steps
 
-The extension is a research showcase with reproducible analysis code. Strong next steps are nested model selection, explicit controls-only comparisons, uncertainty estimates, and validation with aligned data vintages. The original exploratory population-weighting claim is not carried forward: the legacy code used obesity proportion as a weight, not population.
+This repository documents the county-level modeling component of the research. Next steps include nested model selection, explicit controls-only comparisons, uncertainty estimates, and validation with aligned data vintages. Details of exploratory analyses and their limitations are recorded in the [methods](docs/methods.md).
 
 ## Attribution and reuse
 
-Please credit Saswat Tripathi’s original project by its full title when discussing the research origins. Public data sources retain their respective terms and attribution requirements. No software license has been selected for this repository yet; public availability alone does not grant a reuse license.
+Research by **Saswat Tripathi** ([TDLPoof](https://github.com/TDLPoof)). Please cite this work as: Saswat Tripathi, *Obesity and Fresh Food Access: New Evidence and Solutions From Geospatial Data*. Public data sources retain their respective terms and attribution requirements. No software license has been selected for this repository yet; public availability alone does not grant a reuse license.

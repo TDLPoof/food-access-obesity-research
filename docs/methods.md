@@ -25,8 +25,8 @@ The saved XGBoost gain importance ranks bachelor’s attainment and poverty high
 - **Feature redundancy:** Both outlet densities and a derived swamp measure are used together. The difference-based swamp index is an exact linear combination of the two densities. This is not a clean test of a composite measure versus its components.
 - **Missing outlets:** Preparation fills some missing outlet densities with zero. This can conflate missing information with absence of stores.
 - **No causal identification:** County associations cannot establish individual relationships or intervention effects. Controls do not eliminate unmeasured confounding.
-- **Legacy weights:** Earlier exploratory code calls `y_prop` sample weights “population weights” in its narrative. `y_prop` is obesity prevalence divided by 100. These outcome-derived weighted runs are excluded from the showcase’s default workflow and claims.
+- **Legacy weights:** Earlier exploratory code calls `y_prop` sample weights “population weights” in its narrative. `y_prop` is obesity prevalence divided by 100. These outcome-derived weighted runs are excluded from the default workflow and claims.
 
-## Changes for this showcase
+## Implementation notes
 
-The modeling logic for the unweighted runs is preserved. The command-line interface adds an output directory and CPU-job control. XGBoost prediction plots now use out-of-fold predictions, and those predictions are saved to CSV. Historical reference plots include only the correctly labeled ElasticNet out-of-fold figure and the full-fit SHAP figure. Exploratory state fixed-effects and policy-ranking scripts are outside this repository’s core scope.
+The command-line interface supports an output directory and CPU-job control. Both models save out-of-fold predictions to CSV and use them in prediction plots. The reference figures include an ElasticNet out-of-fold prediction plot and a full-fit XGBoost SHAP plot. Exploratory state fixed-effects and policy-ranking analyses are outside this repository’s core scope.

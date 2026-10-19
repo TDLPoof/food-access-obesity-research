@@ -16,7 +16,7 @@
 | Census ACS S1501 | High-school and bachelor’s attainment | `CensusEducationData.csv` |
 | USDA rural–urban continuum codes | 2013 county classifications | `ruralurbancodes2013.xls` |
 
-The Census education file contains JSON despite its `.csv` extension. Its precise ACS vintage should be verified against the original download before making stronger temporal-alignment claims. Exact original download URLs and source licensing metadata were not preserved in the analysis; the source filenames and checksums in `source_manifest.csv` identify the local inputs used for this showcase.
+The Census education file contains JSON despite its `.csv` extension. Its precise ACS vintage should be verified against the original download before making stronger temporal-alignment claims. Exact original download URLs and source licensing metadata were not preserved in the analysis; the source filenames and checksums in `source_manifest.csv` identify the local inputs used for this analysis.
 
 ## Variables
 
@@ -37,7 +37,7 @@ The Census education file contains JSON despite its `.csv` extension. Its precis
 
 ## Rebuilding from raw sources
 
-Raw source files are not bundled in this smaller showcase repository. The processed dataset supports the full modeling workflow without them. To rebuild from the original local archive, copy the inputs listed above under `data/raw/`, retaining the subdirectories, then run from the repository root:
+Raw source files are not bundled in this repository. The processed dataset supports the full modeling workflow without them. To rebuild from the original local archive, copy the inputs listed above under `data/raw/`, retaining the subdirectories, then run from the repository root:
 
 ```bash
 python src/build_county_obesity_2019.py
