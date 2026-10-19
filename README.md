@@ -1,79 +1,101 @@
 # Obesity and Fresh Food Access
-
 ### New Evidence and Solutions From Geospatial Data
 
-**Saswat Tripathi · ISEF-related research**
+**Saswat Tripathi · ISEF-related research · Applied machine learning**
 
-**Do local food environments help predict adult obesity after accounting for socioeconomic conditions and rural–urban context?** This project combines public data for **3,110 U.S. counties** and compares an interpretable linear model with gradient-boosted trees.
+Can local food environments help predict adult obesity beyond socioeconomic conditions? This research combines public data for **3,110 U.S. counties**, evaluates models on **held-out states**, and tests which food-environment features add predictive value.
 
-## About this research
+**Main finding:** a regularized linear model performs about as well as gradient-boosted trees. Food-swamp information adds modest predictive value; limited food access alone adds little in these experiments. Both models struggle with counties at the extremes of obesity prevalence.
 
-This repository contains **Saswat Tripathi’s research for and continued work on his ISEF project, _“Obesity and Fresh Food Access: New Evidence and Solutions From Geospatial Data.”_** It brings together public geospatial and socioeconomic data to investigate how food access and the balance of healthy and unhealthy food outlets relate to adult obesity across U.S. counties.
+[Research walkthrough](notebooks/research_walkthrough.ipynb) · [Methods](docs/methods.md) · [Data](docs/data.md) · [Verified results](results/portfolio/summary.csv)
 
-The analysis combines county-level datasets, constructs food-environment measures, compares machine-learning models, and examines their predictions using state-grouped validation and model interpretation.
+## Research context
 
-## At a glance
+This repository contains **Saswat Tripathi’s research for and continued work on his ISEF project, _“Obesity and Fresh Food Access: New Evidence and Solutions From Geospatial Data.”_** The county-level modeling component investigates the relationship between food access, the balance of healthy and unhealthy food outlets, and adult obesity.
 
-| Study element | Approach |
+## Machine-learning skills demonstrated
+
+| Skill | Evidence in this repository |
 | --- | --- |
-| Outcome | 2019 age-adjusted adult obesity prevalence, in percentage points |
-| Coverage | 3,110 counties in the supplied cleaned dataset |
-| Food environment | Limited food access; healthy and unhealthy outlet densities; food-swamp measures |
-| Context | Poverty, educational attainment, unemployment, rural–urban classification |
-| Models | ElasticNet and XGBoost |
-| Evaluation | Five-fold cross-validation, holding out entire states |
+| Data integration and feature engineering | Merge CDC, USDA, Census, and BLS data by county FIPS; aggregate tract access measures and construct retail-density ratios |
+| Leakage-aware evaluation | Five outer folds hold out entire states; ElasticNet tuning uses three inner state-grouped folds; scaling stays inside the pipeline |
+| Experimental design | Compare a training-mean baseline and two model families across four deliberately separated feature sets |
+| Model interpretation | Compare feature groups and inspect fold-specific standardized ElasticNet coefficients |
+| Error analysis | Examine out-of-fold errors by state, urbanicity, and observed obesity prevalence |
+| Reproducibility | Record data hashes, package versions, fold assignments, selected hyperparameters, and every held-out prediction; check data and evaluation contracts in CI |
 
-## Results
+## Results on unseen states
 
-| Model | RMSE (percentage points) | MAE (percentage points) | R² |
+The table reports **pooled out-of-fold metrics** for the current analysis. Every model uses the same five outer folds. ElasticNet tuning is nested; XGBoost settings are fixed in advance of this run.
+
+| Model / features | RMSE ↓ (pp) | MAE ↓ (pp) | R² ↑ |
 | --- | ---: | ---: | ---: |
-| ElasticNet | 2.938 | 2.272 | 0.524 |
-| XGBoost | 2.932 | 2.272 | 0.526 |
+| Training-mean baseline | 4.298 | 3.277 | −0.019 |
+| ElasticNet · socioeconomic + rural–urban controls | 2.976 | 2.294 | 0.512 |
+| ElasticNet · controls + access + swamp ratio | **2.935** | **2.270** | **0.525** |
+| XGBoost · socioeconomic + rural–urban controls | 3.001 | 2.334 | 0.503 |
+| XGBoost · controls + access + swamp ratio | 2.944 | 2.276 | 0.522 |
 
-The verified model results are included in [`results/reference/`](results/reference/). The two models perform similarly. Educational attainment and poverty have the strongest signals in the saved coefficients and tree feature importance. The food-swamp log ratio has a smaller positive association in the linear model; limited food access receives a zero coefficient after regularization.
+The lowest observed error is not evidence of a statistically superior model. This comparison suggests that the interpretable linear model is a competitive starting point; it does not rule out better results from other nonlinear specifications.
 
-These findings describe **county-level associations, not causal effects or individual health predictions**. They do not establish that a particular intervention would reduce obesity. See [methods and limitations](docs/methods.md) for evaluation and interpretation details.
+![Nine model and feature-set comparisons with fold variability](results/portfolio/model_comparison.png)
 
-### Predictions on held-out states
+Unlike the pooled table, the chart shows **mean fold RMSE ± one fold standard deviation**. These bars describe variability across geographic splits, not confidence intervals.
 
-![ElasticNet observed versus out-of-fold predicted obesity prevalence](results/reference/elasticnet_pred_vs_obs.png)
+### What do the food features add?
 
-### How the tree model uses the predictors
+- **Access alone:** pooled RMSE changes from 2.976 to 2.980 for ElasticNet and from 3.001 to 2.996 for XGBoost—little improvement.
+- **Access plus swamp ratio:** pooled RMSE improves by about 0.041 pp for ElasticNet and 0.057 pp for XGBoost relative to controls alone. The improvement occurs in four of five folds for ElasticNet and all five for XGBoost.
+- **Separate outlet densities:** perform similarly to the composite ratio. Composite and component measures are tested in separate models to avoid redundant predictors.
 
-![XGBoost SHAP summary showing feature contributions to fitted predictions](results/reference/xgb_shap_beeswarm.png)
+[All nine experiments](results/portfolio/summary.csv) · [Fold-level paired differences](results/portfolio/paired_deltas.csv)
 
-The SHAP figure describes a model fitted to the full dataset; it is an interpretation figure, not an independent validation result.
+## Where the models fail
 
-## Run the analysis
+![Held-out predictions and errors by obesity prevalence](results/portfolio/error_analysis.png)
 
-Use Python 3.11 or newer. The source environment used Python 3.14; dependency versions are pinned to those recorded there.
+For the access-plus-swamp models, both methods tend to **overpredict low-obesity counties and underpredict high-obesity counties**. ElasticNet’s mean error is +4.36 pp below 30% observed obesity and −2.95 pp at 40% or higher. Its metro and nonmetro RMSEs are similar, at 2.92 and 2.94 pp, but errors vary substantially across states.
+
+These outcome-based groups are retrospective diagnostics, not groups available before observing the outcome. Small state samples and restricted outcome ranges make subgroup R² unstable. The [subgroup results](results/portfolio/subgroup_errors.csv) include sample sizes and error metrics.
+
+## Run it
+
+Python **3.11 or newer**; the completed analysis used Python 3.14.
 
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
 python -m pip install -r requirements.txt
-python src/model.py --data data/processed/county_obesity_2019_model_data.csv
+python src/model.py --jobs 1
+python -m unittest discover -s tests -v
 ```
 
-On Windows, activate with `.venv\Scripts\activate`. The default run evaluates both models with two food-swamp definitions and writes metrics, coefficients, predictions, and plots to `results/generated/`. Reference artifacts remain separate. CPU use defaults to two jobs; use `--jobs 1` for a serial run. All four default runs were verified against the reference metrics; see the [validation record](docs/validation.md).
+On Windows, activate with `.venv\Scripts\activate`. The default analysis reads the included processed data and writes to `results/generated/`, leaving the published `results/portfolio/` snapshot unchanged. To regenerate the published snapshot, pass `--output-dir results/portfolio`.
 
-The processed dataset is included, so modeling does not require downloading the original sources. To rebuild it, follow the [data guide](docs/data.md).
+The [notebook](notebooks/research_walkthrough.ipynb) is readable on GitHub with saved outputs. To run it interactively, install JupyterLab in the same environment and open it there. It examines the published experiments; the full training command remains in `src/model.py`.
 
-## Repository guide
+## Repository map
 
 ```text
-src/                     Data preparation and modeling scripts
-data/processed/          Cleaned county-level modeling data
-docs/data.md             Data sources, variables, provenance, and rebuild instructions
-docs/methods.md          Model design and research limitations
-results/reference/       Verified reference results and figures
-requirements.txt         Recorded Python dependency versions
+src/model.py                     Nested evaluation, feature comparisons, error analysis
+src/build_county_obesity_2019.py  Raw-source integration and feature engineering
+data/processed/                  Included county-level dataset
+notebooks/                       Research walkthrough with executed outputs
+results/portfolio/               Current metrics, predictions, figures, and run manifest
+tests/                           Data integrity and evaluation checks
+.github/workflows/checks.yml     Automated checks on pushes and pull requests
+docs/                            Data provenance, methods, and validation
+archive/ + results/reference/    Earlier analysis retained for traceability
 ```
 
-## Scope and next steps
+## Interpretation and next steps
 
-This repository documents the county-level modeling component of the research. Next steps include nested model selection, explicit controls-only comparisons, uncertainty estimates, and validation with aligned data vintages. Details of exploratory analyses and their limitations are recorded in the [methods](docs/methods.md).
+This is an observational county-level study. **Predictive associations do not identify causal effects, individual health risks, or intervention outcomes.** Data vintages differ, some missing outlet values were treated as zero, and geographic dependence can remain across state boundaries. Comparisons informed by this dataset need independent confirmation before stronger generalization claims.
 
-## Attribution and reuse
+Next steps are an external geographic or temporal validation set, better-aligned source vintages, a county exclusion audit, and uncertainty analysis that accounts for spatial dependence. See [methods and limitations](docs/methods.md).
 
-Research by **Saswat Tripathi** ([TDLPoof](https://github.com/TDLPoof)). Please cite this work as: Saswat Tripathi, *Obesity and Fresh Food Access: New Evidence and Solutions From Geospatial Data*. Public data sources retain their respective terms and attribution requirements. No software license has been selected for this repository yet; public availability alone does not grant a reuse license.
+## Author
+
+**Saswat Tripathi** · [GitHub: TDLPoof](https://github.com/TDLPoof)
+
+*Obesity and Fresh Food Access: New Evidence and Solutions From Geospatial Data.* Public data sources retain their attribution and reuse terms. A software license has not yet been selected.

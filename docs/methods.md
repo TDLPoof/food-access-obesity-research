@@ -1,32 +1,53 @@
-# Methods and limitations
+# Experimental design and limitations
 
-## Research design
+## Question and outcome
 
-This is a cross-sectional county-level analysis. The target is CDC PLACES age-adjusted adult obesity prevalence for 2019 (`obesity_adj_pct`). The included dataset contains 3,110 unique county FIPS codes with 20 columns.
+The study asks whether food-environment measurements add predictive information beyond socioeconomic and rural–urban context. The target is 2019 age-adjusted adult obesity percentage (`obesity_adj_pct`). Each of the 3,110 rows is a county, not a person. Counties receive equal weight.
 
-Both models use limited-access share, healthy and unhealthy outlet densities, one food-swamp measure, poverty, high-school and bachelor’s attainment, unemployment, and rural–urban indicator variables. The baseline swamp measure is a smoothed log ratio; a difference-based index is evaluated as a sensitivity check.
+## Controlled feature comparisons
 
-ElasticNet standardizes continuous predictors inside its training pipeline and searches alpha values 0.01, 0.1, 1.0 and L1 ratios 0.2, 0.5, 0.8. XGBoost uses 300 trees, depth 3, learning rate 0.05, subsampling and column sampling of 0.8, and L2 regularization of 5. Both use a random seed of 42.
+| Feature set | Inputs |
+| --- | --- |
+| `controls` | Poverty, high-school and bachelor’s attainment, unemployment, RUCC 2–9 indicators |
+| `access` | Controls + low-access population share |
+| `swamp` | Controls + access + smoothed unhealthy/healthy outlet log ratio |
+| `outlets` | Controls + access + separate healthy and unhealthy outlet densities |
 
-Five-fold GroupKFold groups counties by the first two digits of their FIPS code. Entire states are held out together. Reported RMSE, MAE, and R² are calculated over pooled out-of-fold predictions. They are not fold means with confidence intervals.
+The composite and its component densities are not included together. The outcome fraction (`y_prop`), FIPS, state identifier, and diagnostic group labels are never predictors. FIPS supplies grouping information only.
 
-## Reading the results
+## Evaluation
 
-The baseline reference metrics are copied from the existing analysis outputs, not reconstructed from narrative notes. ElasticNet’s standardized coefficients include bachelor’s attainment −1.912, poverty +1.382, and swamp log ratio +0.331 percentage points per standard-deviation increase, conditional on the other predictors. These are regularized associations, not treatment effects or significance tests.
+Five deterministic GroupKFold outer folds hold out entire states. All nine experiments use identical outer folds. A training-mean DummyRegressor establishes a naive baseline. Each county receives exactly one held-out prediction per experiment.
 
-The saved XGBoost gain importance ranks bachelor’s attainment and poverty highest. Gain and SHAP characterize fitted model behavior; correlated inputs can share or redistribute importance. The SHAP reference plot uses the full fitted dataset.
+For ElasticNet, each outer training set runs a three-fold state-grouped GridSearchCV over alpha ∈ {0.01, 0.1, 1.0} and L1 ratio ∈ {0.2, 0.5, 0.8}. Selection minimizes mean inner-fold RMSE. Scaling occurs inside the pipeline, independently within each inner fit, and the selected pipeline is refitted using only the outer training set before prediction. RUCC indicator variables are passed through unscaled. Fold-specific coefficients therefore use each outer training set’s own scaling.
 
-## Limitations to retain when presenting this work
+XGBoost uses fixed settings inherited from the prior analysis: 300 trees, depth 3, learning rate 0.05, subsample 0.8, column sampling 0.8, L2 regularization 5, squared-error objective, and random seed 42. No XGBoost tuning or early stopping uses outer test data. These settings have a history with this dataset; the revised evaluation is not a preregistered or untouched external test.
 
-- **Model selection:** ElasticNet selects hyperparameters on the full dataset using grouped cross-validation, then evaluates the selected settings on the same grouped folds. This is not nested cross-validation, so its performance estimate may be optimistic.
-- **Geography:** Holding out states reduces within-state overlap but does not remove every form of spatial dependence.
-- **Mixed vintages:** The outcome is from 2019, retail-density proxies from 2016, rural–urban codes from 2013, and the access-share denominator from the 2010 census population. Source publication dates differ from measurement years.
-- **Coverage and missing data:** The preparation code performs complete-case deletion after merging. The supplied cleaned data have 3,110 rows versus 3,122 in the earlier workspace. Original notes attribute exclusions to Connecticut geographic mismatches and other missing records; a row-level exclusion audit has not been reconstructed.
-- **Feature redundancy:** Both outlet densities and a derived swamp measure are used together. The difference-based swamp index is an exact linear combination of the two densities. This is not a clean test of a composite measure versus its components.
-- **Missing outlets:** Preparation fills some missing outlet densities with zero. This can conflate missing information with absence of stores.
-- **No causal identification:** County associations cannot establish individual relationships or intervention effects. Controls do not eliminate unmeasured confounding.
-- **Legacy weights:** Earlier exploratory code calls `y_prop` sample weights “population weights” in its narrative. `y_prop` is obesity prevalence divided by 100. These outcome-derived weighted runs are excluded from the default workflow and claims.
+`fold_audit.json` records outer and inner state membership. `fold_metrics.csv` records selected ElasticNet settings per outer fold. `predictions.csv` supports recomputing all metrics.
 
-## Implementation notes
+## Reporting
 
-The command-line interface supports an output directory and CPU-job control. Both models save out-of-fold predictions to CSV and use them in prediction plots. The reference figures include an ElasticNet out-of-fold prediction plot and a full-fit XGBoost SHAP plot. Exploratory state fixed-effects and policy-ranking analyses are outside this repository’s core scope.
+- Summary RMSE, MAE, R², and bias use pooled out-of-fold predictions; errors are in percentage points.
+- Fold RMSE mean and sample standard deviation are reported separately. Standard deviations are not confidence intervals; fold training sets overlap.
+- Paired feature-set comparisons subtract controls-only RMSE within the same fold. Negative values indicate improvement.
+- Model rankings are descriptive. Selecting the best of these experiments and reporting its score can introduce selection optimism; independent validation remains necessary.
+- A positive bias means overprediction. State, RUCC metro/nonmetro (codes 1–3 versus 4–9), and fixed observed-prevalence bands support error analysis. Outcome bands are retrospective; subgroup R² may be unstable with few counties or restricted outcome ranges.
+
+## Findings
+
+The nested ElasticNet swamp model achieves pooled RMSE 2.9346 pp and R² 0.5250; the fixed XGBoost swamp model achieves RMSE 2.9442 pp and R² 0.5218. Controls-only RMSEs are 2.9757 and 3.0009 pp, respectively. Limited access alone contributes little incremental predictive value under these specifications. These small differences do not establish significance or causality.
+
+Both models regress toward the middle of the observed outcome distribution. Similar overall accuracy can hide geographic errors; the subgroup tables make this visible.
+
+## Data and interpretation limits
+
+- **Mixed vintages:** 2019 obesity, 2016 retail-density proxies, 2013 RUCC, and a 2010 population denominator for access. Exact ACS education vintage remains unverified.
+- **Coverage:** Complete-case merging reduces the earlier 3,122-row table to 3,110 rows. Earlier notes attribute exclusions to Connecticut geography mismatches and missing records; a row-level exclusion audit has not been reconstructed.
+- **Missing outlets:** Preparation fills some missing densities with zero, potentially conflating missing information and absent outlets.
+- **Geography:** State-held-out validation reduces within-state overlap but does not eliminate cross-border spatial dependence or measurement dependencies.
+- **Source outcome:** The CDC target is an estimated county prevalence; this exercise predicts those estimates rather than individual diagnoses.
+- **Association:** Controls and predictive models do not remove unmeasured confounding, identify intervention effects, or justify individual-level conclusions from county aggregates.
+
+## Earlier analysis
+
+`archive/legacy_model.py` and `results/reference/` preserve the earlier workflow and selected outputs. That workflow tuned ElasticNet before out-of-fold evaluation and combined outlet components with their derived swamp measure. It also contained optional outcome-derived weighting, which is not population weighting. Those results and the full-fit SHAP figure are historical artifacts, not results for the current feature sets or validation protocol. The current portfolio workflow uses unweighted models and nested ElasticNet tuning.

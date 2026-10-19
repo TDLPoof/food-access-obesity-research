@@ -1,0 +1,16 @@
+{
+  "python": "3.14.8",
+  "rows": 3110,
+  "states": 49,
+  "data_sha256": "3dbf9f99f638281e61d335ada0adf16fe9cd22e2a79b681097f67d2c60c93429",
+  "seed": 42,
+  "outer_folds": 5,
+  "inner_folds": 3,
+  "dependencies": {
+    "numpy": "2.3.4",
+    "pandas": "2.3.3",
+    "scikit-learn": "1.7.2",
+    "xgboost": "3.1.2",
+    "matplotlib": "3.10.7"
+  }
+}
