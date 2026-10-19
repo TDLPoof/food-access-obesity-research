@@ -1,0 +1,2 @@
+OOF_RMSE_pp,OOF_MAE_pp,OOF_R2,best_alpha,best_l1_ratio,weights,swamp_var
+2.9384521667140846,2.272188934426422,0.5237197255635355,0.1,0.8,False,swamp_logratio

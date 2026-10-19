@@ -1,0 +1,2 @@
+model,OOF_RMSE_pp,OOF_MAE_pp,OOF_R2,weighted,swamp_var
+xgb,2.9317988281220697,2.2720884947454816,0.5258741022489988,False,swamp_logratio
